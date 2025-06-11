@@ -51,4 +51,31 @@ public class managerController {
         }
     }
 
+    
+    @GetMapping("/getInfoCustomer")
+    public ResponseEntity<Map<String, Object>> getInfoCustomer(@RequestHeader(value = "token", required = false) String token) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            List<Map<String, Object>> customers = customerService.getAllCustomers();
+            if (customers != null) {
+                response.put("status", "Lấy danh sách khách hàng thành công");
+                response.put("list", customers);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Không có khách hàng nào");
+                return ResponseEntity.status(404).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
 }
