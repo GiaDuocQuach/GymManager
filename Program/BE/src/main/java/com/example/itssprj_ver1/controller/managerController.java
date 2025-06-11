@@ -402,3 +402,66 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+        @PostMapping("/updateMemberRegister")
+    public ResponseEntity<Map<String, Object>> updateMemberRegister(@RequestHeader(value = "token", required = false) String token,
+                                                                    @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Lấy thông tin từ request
+            int memberRegId = Integer.parseInt(request.get("memberRegId"));
+            String status = request.get("status");
+
+            // Parse dates from request
+            Date beginAt = null;
+            Date endAt = null;
+            try {
+                if (request.containsKey("beginAt") && !request.get("beginAt").isEmpty()) {
+                    String beginAtStr = request.get("beginAt");
+                    beginAt = Date.valueOf(beginAtStr);
+                }
+                if (request.containsKey("endAt") && !request.get("endAt").isEmpty()) {
+                    // Tương tự cho endAt
+                    String endAtStr = request.get("endAt");
+                    endAt = Date.valueOf(endAtStr);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Định dạng ngày tháng không hợp lệ: " + e.getMessage());
+            }
+            if (beginAt != null && endAt != null) {
+                if (beginAt.after(endAt)) {
+                    response.put("message", "Thời gian bắt đầu không được sau thời gian kết thúc");
+                    return ResponseEntity.badRequest().body(response);
+                }
+
+                // Cập nhật nếu thời gian hợp lệ
+                if (memRegService.updateMemberReg(memberRegId, status, beginAt, endAt)) {
+                    response.put("status", "Sửa thông tin đăng ký gói tập thành công");
+                    return ResponseEntity.ok(response);
+                } else {
+                    response.put("status", "Sửa thông tin đăng ký gói tập không thành công");
+                    return ResponseEntity.status(400).body(response);
+                }
+            } else {
+                // Xử lý xóa
+                if (memRegService.deleteMemberReg(memberRegId, status)) {
+                    response.put("status", "Xóa thông tin đăng ký gói tập thành công");
+                    return ResponseEntity.ok(response);
+                } else {
+                    response.put("status", "Xóa thông tin đăng ký gói tập không thành công");
+                    return ResponseEntity.status(400).body(response);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
