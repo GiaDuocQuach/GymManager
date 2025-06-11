@@ -465,3 +465,58 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+        @PostMapping("/getMemberRegister")
+    public ResponseEntity<Map<String, Object>> getMemberRegister(@RequestHeader(value = "token", required = false) String token,
+                                                                 @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+            String status = request.get("status");
+            String createAtStr = request.get("createAt");
+
+            // Parse dates from request
+            Date createAt = null;
+            if (createAtStr != null && !createAtStr.isEmpty()) {
+                try {
+                    createAt = Date.valueOf(createAtStr);
+                } catch (Exception e) {
+                    throw new IllegalArgumentException("Định dạng ngày tháng không hợp lệ: " + e.getMessage());
+                }
+            }
+
+            List<Map<String, Object>> memberRegisters = new ArrayList<>();
+
+            if (status != null && !status.isEmpty() && createAt == null) {
+                // Trường hợp 1: Chỉ có status
+                memberRegisters = memRegService.getMemberRegByStatus(status);
+            } else if (createAt != null && (status == null || status.isEmpty())) {
+                // Trường hợp 2: Chỉ có createAt
+                memberRegisters = memRegService.getMemberRegByCreateAt(createAt);
+            } else if (createAt != null && status != null && !status.isEmpty()) {
+                // Trường hợp 3: Có cả status và createAt
+                memberRegisters = memRegService.getMemberRegByStatusAndCreateAt(status, createAt);
+            } else {
+                // Trường hợp 4: Không có điều kiện nào
+                memberRegisters = memRegService.getAllMemberReg();
+            }
+
+            if (memberRegisters != null && !memberRegisters.isEmpty()) {
+                response.put("status", "Lấy danh sách gia hạn thành công");
+                response.put("list", memberRegisters);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Không có dữ liệu gia hạn");
+                response.put("list", new ArrayList<>());  // Return empty list instead of null
+                return ResponseEntity.ok(response);  // Return 200 OK with empty list
+            }
+        } catch (Exception e) {
+            e.printStackTrace();  // For debugging
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
