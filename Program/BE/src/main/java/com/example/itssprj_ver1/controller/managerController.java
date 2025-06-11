@@ -285,3 +285,41 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+        @PostMapping("/updateExercise")
+    public ResponseEntity<Map<String, Object>> updateExerciseSession(@RequestHeader(value = "token", required = false) String token,
+                                                                     @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Kiểm tra sessionid có trong request không
+            if (!request.containsKey("sessionid")) {
+                response.put("status", "Thiếu sessionid");
+                return ResponseEntity.status(400).body(response);
+            }
+
+            int sessionid = Integer.parseInt(request.get("sessionid"));
+            String cufirstname = request.get("cufirstname");
+            String culastname = request.get("culastname");
+            String ptfirstname = request.get("ptfirstname");
+            String ptlastname = request.get("ptlastname");
+            String exerciseType = request.get("exerciseType");
+
+            if (exerSession.updateSession(sessionid, cufirstname, culastname, ptfirstname, ptlastname, exerciseType)) {
+                response.put("status", "Sửa buổi tập thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Sửa buổi tập không thành công");
+                return ResponseEntity.status(400).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
