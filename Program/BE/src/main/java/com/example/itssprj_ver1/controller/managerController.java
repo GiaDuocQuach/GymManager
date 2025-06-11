@@ -109,7 +109,7 @@ public class managerController {
     }
 }
 
-@PostMapping("/updateDevice")
+    @PostMapping("/updateDevice")
     public ResponseEntity<Map<String, Object>> updateDevice(@RequestHeader(value = "token", required = false) String token,
                                                             @RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
@@ -138,7 +138,7 @@ public class managerController {
         }
     }
 
-@PostMapping("/deleteDevice")
+    @PostMapping("/deleteDevice")
     public ResponseEntity<Map<String, Object>> deleteDevice(@RequestHeader(value = "token", required = false) String token,
                                                             @RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
@@ -162,6 +162,72 @@ public class managerController {
             }
         } catch (Exception e) {
             response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+        @PostMapping("/findDevice")
+    public ResponseEntity<Map<String, Object>> findDevice(
+            @RequestHeader(value = "token", required = false) String token,
+            @RequestBody Map<String, String> request) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+            String room_name = request.get("room_name");
+            String roomEquipment = request.get("roomEquipment");
+            String status = request.get("status");
+            // Xử lý các giá trị rỗng
+            boolean hasRoomName = room_name != null && !room_name.trim().isEmpty();
+            boolean hasEquipment = roomEquipment != null && !roomEquipment.trim().isEmpty();
+            boolean hasStatus = status != null && !status.trim().isEmpty();
+
+            List<Map<String, Object>> roomEquipments;
+
+            // Xử lý các trường hợp tìm kiếm
+            if (hasRoomName && hasEquipment && hasStatus) {
+                // Trường hợp 1: Tất cả 3 tham số
+                roomEquipments = roomEquipmentService.getRoomEquipmentByRoomNameAndNameDeviceAndStatus(
+                        room_name, roomEquipment, status);
+            } else if (hasRoomName && hasEquipment) {
+                // Trường hợp 2: room_name + roomEquipment
+                roomEquipments = roomEquipmentService.getRoomEquipmentByRoomNameAndNameDevice(
+                        room_name, roomEquipment);
+            } else if (hasRoomName && hasStatus) {
+                // Trường hợp 3: room_name + status
+                roomEquipments = roomEquipmentService.getRoomEquipmentByRoomNameAndStatus(
+                        room_name, status);
+            } else if (hasRoomName) {
+                // Trường hợp 4: Chỉ room_name
+                roomEquipments = roomEquipmentService.getRoomEquipmentByRoomName(room_name);
+            } else if (hasEquipment) {
+                // Trường hợp 5: Chỉ roomEquipment
+                roomEquipments = roomEquipmentService.getRoomEquipmentByNameDevice(roomEquipment);
+            } else if (hasStatus) {
+                // Trường hợp 6: Chỉ status
+                roomEquipments = roomEquipmentService.getRoomEquipmentByStatus(status);
+            } else {
+                // Trường hợp 7: Không có tham số nào
+                roomEquipments = roomEquipmentService.getAllRoomEquipment();
+            }
+
+            // Trả về kết quả
+            if (roomEquipments != null && !roomEquipments.isEmpty()) {
+                response.put("status", "Lấy danh sách thiết bị thành công");
+                response.put("list", roomEquipments);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Không có thiết bị nào");
+                return ResponseEntity.ok(response); // Sửa thành 200 OK với danh sách rỗng
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            e.printStackTrace(); // Log lỗi để debug
             return ResponseEntity.status(500).body(response);
         }
     }
