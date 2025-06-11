@@ -107,7 +107,6 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
-}
 
     @PostMapping("/updateDevice")
     public ResponseEntity<Map<String, Object>> updateDevice(@RequestHeader(value = "token", required = false) String token,
@@ -231,3 +230,29 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+        @GetMapping("/getExercise")
+    public ResponseEntity<Map<String, Object>> getExercise(@RequestHeader(value = "token", required = false) String token) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+            List<Map<String, Object>> exercise = exerSession.getAllSessions();
+            if (exercise != null) {
+                response.put("status", "Lấy danh sách thiết bị thành công");
+                response.put("list", exercise);
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Không có thiết bị nào");
+                return ResponseEntity.status(404).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+    
