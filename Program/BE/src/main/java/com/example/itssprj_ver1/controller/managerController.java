@@ -352,3 +352,53 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+        @PostMapping("/addMemberRegister")
+    public ResponseEntity<Map<String, Object>> addMemberRegister(
+            @RequestHeader(value = "token", required = false) String token,
+            @RequestBody Map<String, String> request) {
+
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Lấy thông tin từ request
+            String phone = request.get("phone");
+            String namepackage = request.get("namepackage");
+            String status = request.get("status");
+
+            // Parse dates from request
+            Date beginAt = null;
+            Date endAt = null;
+            try {
+                if (request.containsKey("beginAt") && !request.get("beginAt").isEmpty()) {
+                    String beginAtStr = request.get("beginAt");
+                    beginAt = Date.valueOf(beginAtStr);
+                }
+                if (request.containsKey("endAt") && !request.get("endAt").isEmpty()) {
+                    String endAtStr = request.get("endAt");
+                    endAt = Date.valueOf(endAtStr);
+                }
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Định dạng ngày tháng không hợp lệ: " + e.getMessage());
+            }
+
+            // Gọi service để thêm member register
+            if (memRegService.addMemberReg(phone, namepackage, status, beginAt, endAt)) {
+                response.put("status", "Đăng ký gói tập thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Đăng ký gói tập không thành công");
+                return ResponseEntity.status(400).body(response);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
