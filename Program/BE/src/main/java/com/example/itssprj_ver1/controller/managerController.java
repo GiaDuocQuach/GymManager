@@ -137,3 +137,31 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+@PostMapping("/deleteDevice")
+    public ResponseEntity<Map<String, Object>> deleteDevice(@RequestHeader(value = "token", required = false) String token,
+                                                            @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            String room_name = request.get("room_name");
+            String equipment_name = request.get("equipment_name");
+
+            if (roomEquipmentService.deleteRoomEquipment(room_name, equipment_name)) {
+                response.put("status", "Xóa thiết bị thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Xóa thiết bị không thành công");
+                return ResponseEntity.status(400).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
