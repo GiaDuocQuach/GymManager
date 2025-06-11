@@ -323,3 +323,32 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
+
+        @PostMapping("addPayment")
+    public ResponseEntity<Map<String, Object>> addPayment(@RequestHeader(value = "token", required = false) String token,
+                                                          @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+            String phone = request.get("phone");
+            String paymentMethod = request.get("paymentMethod");
+            Float amount = Float.parseFloat(request.get("amount"));
+            Boolean paid = Boolean.parseBoolean(request.get("paid"));
+
+            if (paymentService.addPayment(phone, paymentMethod, amount, paid)) {
+                response.put("status", "Thêm thanh toán thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Thêm thanh toán không thành công");
+                return ResponseEntity.status(400).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
