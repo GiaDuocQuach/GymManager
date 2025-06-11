@@ -255,4 +255,33 @@ public class managerController {
             return ResponseEntity.status(500).body(response);
         }
     }
-    
+    @PostMapping("/addExercise")// thêm quan hệ khách hàng với pt
+    public ResponseEntity<Map<String, Object>> addExerciseSession(@RequestHeader(value = "token", required = false) String token,
+                                                                @RequestBody Map<String, String> request) {
+        Map<String, Object> response = new HashMap<>();
+        try {
+            // Kiểm tra token
+            if (token == null || token.isEmpty()) {
+                response.put("success", false);
+                response.put("message", "Token is missing or invalid");
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            // Kiểm tra các trường bắt buộc
+            int customerid = Integer.parseInt(request.get("customerid"));
+            int ptid = Integer.parseInt(request.get("ptid"));
+            Timestamp beginAt = new Timestamp(System.currentTimeMillis());
+            String exerciseType = request.get("exerciseType");
+
+            if (exerSession.addSession(customerid, ptid, exerciseType, beginAt)){
+                response.put("status", "Thêm buổi tập thành công");
+                return ResponseEntity.ok(response);
+            } else {
+                response.put("status", "Thêm buổi tập không thành công");
+                return ResponseEntity.status(400).body(response);
+            }
+        } catch (Exception e) {
+            response.put("message", "Đã xảy ra lỗi: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
